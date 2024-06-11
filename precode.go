@@ -85,3 +85,14 @@ func getTaskByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(task)
 }
+
+// deleteTaskByID удаляет задачу по ID
+func deleteTaskByID(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if _, ok := tasks[id]; !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	delete(tasks, id)
+	w.WriteHeader(http.StatusOK)
+}
