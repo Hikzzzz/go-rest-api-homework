@@ -73,3 +73,15 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 	tasks[newTask.ID] = newTask
 	w.WriteHeader(http.StatusCreated)
 }
+
+// getTaskByID возвращает задачу по ID
+func getTaskByID(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	task, ok := tasks[id]
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(task)
+}
