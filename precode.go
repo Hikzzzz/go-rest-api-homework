@@ -41,7 +41,6 @@ var tasks = map[string]Task{
 	},
 }
 
-// getAllTasks возвращает все задачи
 func getAllTasks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK) // 200 OK
@@ -82,7 +81,7 @@ func getTaskByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK) // 200 OK
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(task)
 }
 
@@ -96,7 +95,7 @@ func deleteTaskByID(w http.ResponseWriter, r *http.Request) {
 
 	delete(tasks, id)
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK) // 200 OK
+	w.WriteHeader(http.StatusOK)
 }
 
 func main() {
