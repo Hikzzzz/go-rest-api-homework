@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -41,6 +42,63 @@ var tasks = map[string]Task{
 }
 
 // getAllTasks возвращает все задачи
+func getAllTasks(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK) // 200 OK
+
+	if err := json.NewEncoder(w).Encode(tasks); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+// createTask добавляет новую задачу в мапу
+func createTask(w http.ResponseWriter, r *http.Request) {
+	var newTask Task
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	if err := json.Unmarshal(body, &newTask); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	tasks[newTask.ID] = newTask
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(newTask)
+}
+
+// getTaskByID возвращает задачу по ID
+func getTaskByID(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	task, ok := tasks[id]
+	if !ok {
+		http.Error(w, "Not Found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK) // 200 OK
+	json.NewEncoder(w).Encode(task)
+}
+
+// deleteTaskByID удаляет задачу по ID
+func deleteTaskByID(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if _, ok := tasks[id]; !ok {
+		http.Error(w, "Not Found", http.StatusNotFound)
+		return
+	}
+
+	delete(tasks, id)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK) // 200 OK
+}
+
 func main() {
 	r := chi.NewRouter()
 
@@ -52,47 +110,4 @@ func main() {
 	if err := http.ListenAndServe(":8080", r); err != nil {
 		fmt.Printf("Ошибка при запуске сервера: %s\n", err.Error())
 	}
-}
-
-// getAllTasks возвращает все задачи
-func getAllTasks(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(tasks); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-}
-
-// createTask добавляет новую задачу в мапу
-func createTask(w http.ResponseWriter, r *http.Request) {
-	var newTask Task
-	if err := json.NewDecoder(r.Body).Decode(&newTask); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	tasks[newTask.ID] = newTask
-	w.WriteHeader(http.StatusCreated)
-}
-
-// getTaskByID возвращает задачу по ID
-func getTaskByID(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	task, ok := tasks[id]
-	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(task)
-}
-
-// deleteTaskByID удаляет задачу по ID
-func deleteTaskByID(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	if _, ok := tasks[id]; !ok {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	delete(tasks, id)
-	w.WriteHeader(http.StatusOK)
 }
