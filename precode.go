@@ -53,10 +53,23 @@ func main() {
 		fmt.Printf("Ошибка при запуске сервера: %s\n", err.Error())
 	}
 }
+
+// getAllTasks возвращает все задачи
 func getAllTasks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(tasks); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+}
+
+// createTask добавляет новую задачу в мапу
+func createTask(w http.ResponseWriter, r *http.Request) {
+	var newTask Task
+	if err := json.NewDecoder(r.Body).Decode(&newTask); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	tasks[newTask.ID] = newTask
+	w.WriteHeader(http.StatusCreated)
 }
